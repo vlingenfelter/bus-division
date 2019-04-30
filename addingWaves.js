@@ -1,6 +1,10 @@
+var w = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+
+console.log(w);
+
 // set the dimensions and margins of the graph
-var margin = {top: 165, right: 0, bottom: 20, left:30},
-    width = 1000 - margin.left - margin.right,
+var margin = {top: 165, right: (w * 0.3) , bottom: 20, left:(w * 0.3)},
+    width = w - margin.left - margin.right,
     height = 1100 - margin.top - margin.bottom;
 
 

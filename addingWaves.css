@@ -15,7 +15,7 @@ h1 {
   color:white;
   font-family: Helvetica;
   font-weight: 400;
-  font-size: 120px;
+  font-size: 5.5vw;
   margin-bottom: 0px;
 }
 
@@ -23,6 +23,6 @@ h2 {
   color: white;
   font-family: Helvetica;
   font-weight: 400;
-  font-size: 90px;
+  font-size: 4vw;
   margin-top: 5px;
 }
