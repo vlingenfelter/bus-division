@@ -238,6 +238,13 @@ d3.csv("buses.csv", function(data) {
                 .attr("y", 15)
                 .text(function(d) { return d});
 
+          var titleHeight = document.getElementById('title').offsetHeight;
+
+          var xAxis = d3.selectAll(".x-axis")
+              .transition()
+              .duration(500)
+              .attr("transform", "translate(0," + (d3.event.pageY - margin.top - titleHeight - 5) + ")");
+
       })
       .on("mouseout", function(d, i) {
         d3.selectAll("path")
@@ -248,6 +255,12 @@ d3.csv("buses.csv", function(data) {
         div.transition()
           .duration(500)
           .style("opacity", 0);
+
+          var xAxis = d3.selectAll(".x-axis")
+              .transition()
+              .duration(500)
+              .attr("transform", "translate(0," + height + ")")
+              .attr("class", "x-axis")
       });
 
   // Add areas
