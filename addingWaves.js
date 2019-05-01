@@ -3,7 +3,7 @@ w -= 40;
 // set the dimensions and margins of the graph
 var margin = {top: 165, right: (w * 0.28) , bottom: 20, left:(w * 0.28)},
     width = w - margin.left - margin.right,
-    height = 1100 - margin.top - margin.bottom;
+    height = 900 - margin.top - margin.bottom;
 
 
 // append the svg object to the body of the page
@@ -18,6 +18,25 @@ var svg = d3.select("#my_dataviz")
 var div = d3.select("body").append("div")
         .attr("class", "tooltip")
         .style("opacity", 0);
+
+
+var sources  = {};
+d3.csv("sources.csv", function(data) {
+  for (var i=0; i<data.length; i++) {
+    var key = data[i].route;
+    var values = {
+      hv: data[i].hv * 1,
+      dv: data[i].dv * 1,
+      dt: data[i].dt * 1,
+      pf: data[i].pf * 1
+    }
+    sources[key] = values;
+  }
+})
+
+function getKeyByValue(object, value) {
+  return Object.keys(object).find(key => object[key] === value);
+}
 
 //read data
 d3.csv("buses.csv", function(data) {
@@ -92,6 +111,8 @@ d3.csv("buses.csv", function(data) {
           var littleWidth = (margin.right / 3) * 2;
           var littleHeight = littleWidth;
           var radius = littleWidth/2;
+          var key = d;
+          var title = `<h3>Route ${d}</h3>`;
 
           d3.selectAll("path")
             .transition()
@@ -105,17 +126,17 @@ d3.csv("buses.csv", function(data) {
           div.transition()
              .duration(500)
              .style("opacity", 1);
-          div.html("")
+          div.html(title)
              .style("left", (d3.event.pageX + width + 30) + "px")
-             .style("top", (d3.event.pageY - radius ) + "px");
+             .style("top", (d3.event.pageY - radius - 24 ) + "px");
 
           var littleWidth = (margin.right / 3) * 2;
           var littleHeight = littleWidth;
           var radius = littleWidth/2;
-          var pieData = [10, 20, 40, 90];
+          var pieData = Object.values(sources[key]);
           var t1 = textures.lines().thicker().stroke("white").background("black"),
               t2 = textures.circles().thicker().fill("white").stroke("white").background("black"),
-              t3 = textures.lines().size(20).orientation("5/8").stroke("white").strokeWidth(2)
+              t3 = textures.lines().orientation("5/8").stroke("white").strokeWidth(2)
               t4 = textures.lines().thicker().orientation("7/8").stroke("black").background("white");
 
           var littleSVG = div.append("svg")
@@ -139,13 +160,14 @@ d3.csv("buses.csv", function(data) {
               .value(function(d) { return d; });
 
           var color = function(d) {
-            if (d <= 10) {
+            var colorKey = getKeyByValue(sources[key], d);
+            if (colorKey == "dt") { // dropped trips
               return t1.url();
-            } else if (d <= 20) {
+            } else if (colorKey == "hv") { // headway variability
               return t2.url();
-            } else if (d <= 50) {
+            } else if (colorKey == "dv") { // demand variability
               return t3.url();
-            } else {
+            } else { // planned frequency
               return t4.url();
             }
           };

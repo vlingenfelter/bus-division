@@ -37,9 +37,16 @@ h1 {
 h2 {
   color: white;
   font-family: Helvetica;
-  font-weight: 400;
+  font-weight: 500;
   font-size: 4vw;
   margin-top: 5px;
+}
+
+h3 {
+	color: white;
+	font-family: Helvetica;
+	font-weight: 400;
+	font-size: 24px;
 }
 
 .arc path {
