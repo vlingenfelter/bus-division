@@ -5,6 +5,21 @@ body {
 
 .tick text {
   fill: white;
+	cursor: default;
+}
+
+div.tooltip {
+    position: absolute;
+    text-align: center;
+    width: auto;
+    height: auto;
+    padding: 4px;
+    font: 16px Helvetica;
+		color: white;
+    background: black;
+    border: 2px solid black;
+    border-radius: 2px;
+    pointer-events: none;
 }
 
 .main{
@@ -25,4 +40,14 @@ h2 {
   font-weight: 400;
   font-size: 4vw;
   margin-top: 5px;
+}
+
+.arc path {
+  stroke: black;
+	stroke-width: 15;
+}
+
+.arc-outline path {
+	stroke: white;
+	stroke-width: 2;
 }

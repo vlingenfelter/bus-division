@@ -1,9 +1,7 @@
 var w = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
-
-console.log(w);
-
+w -= 40;
 // set the dimensions and margins of the graph
-var margin = {top: 165, right: (w * 0.3) , bottom: 20, left:(w * 0.3)},
+var margin = {top: 165, right: (w * 0.28) , bottom: 20, left:(w * 0.28)},
     width = w - margin.left - margin.right,
     height = 1100 - margin.top - margin.bottom;
 
@@ -17,35 +15,16 @@ var svg = d3.select("#my_dataviz")
     .attr("transform",
           "translate(" + margin.left + "," + margin.top + ")");
 
+var div = d3.select("body").append("div")
+        .attr("class", "tooltip")
+        .style("opacity", 0);
+
 //read data
 d3.csv("buses.csv", function(data) {
   thisData = data;
   // Get the different categories and count them
   var categories = data.columns.slice(1)
   var n = categories.length
-
-  // Add X axis
-  var x = d3.scaleLinear()
-    .domain([3, 27])
-    .range([ 0, width ]);
-
-  svg.append("g")
-    .attr("transform", "translate(0," + height + ")")
-    .call(d3.axisBottom(x));
-
-  // Create a Y scale for densities
-  var y = d3.scaleLinear()
-    .domain([0, 200])
-    .range([ height, 0]);
-
-  // Create the Y axis for names
-  var yName = d3.scaleBand()
-    .domain(categories)
-    .range([0, height])
-    .paddingInner(1)
-  svg.append("g")
-    .call(d3.axisLeft(yName));
-
 
   const distinctHalfhour = [...new Set(data.map(x => x.halfhour))];
 
@@ -62,12 +41,149 @@ d3.csv("buses.csv", function(data) {
     }
   }
 
+
+  // Add X axis
+  var x = d3.scaleLinear()
+    .domain([3, 27])
+    .range([ 0, width]);
+
+  svg.append("g")
+    .attr("transform", "translate(0," + height + ")")
+    .attr("class", "x-axis")
+    .style("font-size", 14)
+    .call(d3.axisBottom(x).tickFormat(function(d, i) { // right now it's just showing position not time seg
+      // make sure that it is parsing times of day correctly
+      if (((i + 1) % 2) == 0) {
+          if (parseInt(d) > 12 && parseInt(d) < 24) {
+            return `${parseInt(d) - 12}p`;
+          } else if (parseInt(d) > 24) {
+            return `${parseInt(d) - 24}a`;
+          } else if (parseInt(d) == 24) {
+            return "12a";
+          } else if (parseInt(d) == 12) {
+            return "12p";
+          } else {
+            return `${d}a`;
+          }
+        }
+      })).on("mouseover", function(d, i) {
+        console.log(i);
+      });
+
+  // Create a Y scale for densities
+  var y = d3.scaleLinear()
+    .domain([0, 200])
+    .range([ height, 0]);
+
+  // Create the Y axis for names
+  var yName = d3.scaleBand()
+    .domain(categories)
+    .range([0, height])
+    .paddingInner(1)
+  svg.append("g")
+    .attr("class", "y-axis")
+    .style("font-size", 14)
+    .call(d3.axisLeft(yName));
+
+  svg.selectAll(".y-axis")
+      .selectAll("text")
+      .on("mouseover", function(d, i) {
+          var classKey = `.class-${d}`;
+          var littleWidth = (margin.right / 3) * 2;
+          var littleHeight = littleWidth;
+          var radius = littleWidth/2;
+
+          d3.selectAll("path")
+            .transition()
+            .duration(500)
+            .style("opacity", 0);
+          d3.selectAll(classKey)
+            .transition()
+            .duration(500)
+            .style("opacity", 1);
+
+          div.transition()
+             .duration(500)
+             .style("opacity", 1);
+          div.html("")
+             .style("left", (d3.event.pageX + width + 30) + "px")
+             .style("top", (d3.event.pageY - radius ) + "px");
+
+          var littleWidth = (margin.right / 3) * 2;
+          var littleHeight = littleWidth;
+          var radius = littleWidth/2;
+          var pieData = [10, 20, 40, 90];
+          var t1 = textures.lines().thicker().stroke("white").background("black"),
+              t2 = textures.circles().thicker().fill("white").stroke("white").background("black"),
+              t3 = textures.lines().size(20).orientation("5/8").stroke("white").strokeWidth(2)
+              t4 = textures.lines().thicker().orientation("7/8").stroke("black").background("white");
+
+          var littleSVG = div.append("svg")
+             .attr("width", littleWidth)
+             .attr("height", littleHeight)
+          .append("g")
+              .attr("transform",
+                   "translate(" + radius + "," + radius + ")");
+
+          littleSVG.call(t1);
+          littleSVG.call(t2);
+          littleSVG.call(t3);
+          littleSVG.call(t4);
+
+          var arc = d3.arc()
+             .outerRadius(radius - 10)
+             .innerRadius(0);
+
+          var pie = d3.pie()
+              .sort(null)
+              .value(function(d) { return d; });
+
+          var color = function(d) {
+            if (d <= 10) {
+              return t1.url();
+            } else if (d <= 20) {
+              return t2.url();
+            } else if (d <= 50) {
+              return t3.url();
+            } else {
+              return t4.url();
+            }
+          };
+
+          var g = littleSVG.selectAll(".arc")
+                .data(pie(pieData))
+                .enter().append("g")
+                .attr("class", "arc")
+                .append("path")
+                .attr("d", arc)
+                .style("fill", function(d) { return color(d.data); });
+
+        var g = littleSVG.selectAll(".arc-outline")
+                      .data(pie(pieData))
+                      .enter().append("g")
+                      .attr("class", "arc-outline")
+                      .append("path")
+                      .attr("d", arc)
+                      .style("fill", "none");
+      })
+      .on("mouseout", function(d, i) {
+        d3.selectAll("path")
+          .transition()
+          .duration(500)
+          .style("opacity", 1);
+
+        div.transition()
+          .duration(500)
+          .style("opacity", 0);
+      });
+
   // Add areas
-  svg.selectAll("areas")
+  svg.selectAll("area")
     .data(busCrowding)
     .enter()
     .append("path")
       .attr("transform", function(d){return("translate(0," + (yName(d.key)-height) +")" )})
+      .attr("class", function(d) {return "class-" + d.key})
       .datum(function(d){return(d.density)})
       .attr("fill", "black")
       .attr("stroke", "white")
@@ -76,6 +192,6 @@ d3.csv("buses.csv", function(data) {
           .curve(d3.curveBasis)
           .x(function(d) { return x(d[0]); })
           .y(function(d) { return y(d[1]); })
-      )
+      );
 
 })
