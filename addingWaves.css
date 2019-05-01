@@ -58,3 +58,8 @@ h3 {
 	stroke: white;
 	stroke-width: 2;
 }
+
+.legend text {
+	fill: white;
+	font-family: Helvetica;
+}

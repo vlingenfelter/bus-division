@@ -19,6 +19,11 @@ var div = d3.select("body").append("div")
         .attr("class", "tooltip")
         .style("opacity", 0);
 
+var legend = d3.select("body").append("div")
+            .attr("class", "tooltip")
+            .attr("id", "legend")
+            .style("opacity", 0);
+
 
 var sources  = {};
 d3.csv("sources.csv", function(data) {
@@ -113,6 +118,12 @@ d3.csv("buses.csv", function(data) {
           var radius = littleWidth/2;
           var key = d;
           var title = `<h3>Route ${d}</h3>`;
+          var legendVals = {
+            hv: "Headway variability",
+            dt: "Dropped Trips",
+            dv: "Demand variability",
+            pf: "Planned frequency"
+          }
 
           d3.selectAll("path")
             .transition()
@@ -136,12 +147,12 @@ d3.csv("buses.csv", function(data) {
           var pieData = Object.values(sources[key]);
           var t1 = textures.lines().thicker().stroke("white").background("black"),
               t2 = textures.circles().thicker().fill("white").stroke("white").background("black"),
-              t3 = textures.lines().orientation("5/8").stroke("white").strokeWidth(2)
+              t3 = textures.lines().heavier().thinner().orientation("5/8").stroke("black").background("white"),
               t4 = textures.lines().thicker().orientation("7/8").stroke("black").background("white");
 
           var littleSVG = div.append("svg")
              .attr("width", littleWidth)
-             .attr("height", littleHeight)
+             .attr("height", littleHeight * 2)
           .append("g")
               .attr("transform",
                    "translate(" + radius + "," + radius + ")");
@@ -159,15 +170,15 @@ d3.csv("buses.csv", function(data) {
               .sort(null)
               .value(function(d) { return d; });
 
-          var color = function(d) {
-            var colorKey = getKeyByValue(sources[key], d);
+          var color = function(s, d) {
+            var colorKey = getKeyByValue(s, d);
             if (colorKey == "dt") { // dropped trips
               return t1.url();
             } else if (colorKey == "hv") { // headway variability
               return t2.url();
             } else if (colorKey == "dv") { // demand variability
               return t3.url();
-            } else { // planned frequency
+            } else if (colorKey == "pf"){ // planned frequency
               return t4.url();
             }
           };
@@ -178,15 +189,37 @@ d3.csv("buses.csv", function(data) {
                 .attr("class", "arc")
                 .append("path")
                 .attr("d", arc)
-                .style("fill", function(d) { return color(d.data); });
+                .style("fill", function(d) { return color(sources[key], d.data); });
 
-        var g = littleSVG.selectAll(".arc-outline")
+          var g = littleSVG.selectAll(".arc-outline")
                       .data(pie(pieData))
                       .enter().append("g")
                       .attr("class", "arc-outline")
                       .append("path")
                       .attr("d", arc)
                       .style("fill", "none");
+
+          var legend = littleSVG.selectAll('.legend')
+                    .data(Object.values(legendVals))
+                    .enter().append('g')
+                    .attr("class", "legend")
+                    .attr("transform", function (d, i) {
+                        { return "translate(-" + (radius / 2) + "," + (radius + 10 + (i * 30)) + ")"}
+                      });
+          legend.append('rect')
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("width", 20)
+                .attr("height", 20)
+                .style("fill", function (d) {
+                          return color(legendVals, d)
+                      });
+
+          legend.append('text')
+                .attr("x", 30)
+                .attr("y", 15)
+                .text(function(d) { return d});
+
       })
       .on("mouseout", function(d, i) {
         d3.selectAll("path")
