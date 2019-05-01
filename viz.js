@@ -1,7 +1,7 @@
 var w = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
 var h = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
 
-var margin, width, height;
+var margin, width, height, mobile;
 
 if (w > 1025) {
   w -= 40;
@@ -9,12 +9,14 @@ if (w > 1025) {
   margin = {top: 165, right: (w * 0.28) , bottom: 20, left:(w * 0.28)}
   width = w - margin.left - margin.right;
   height = 900 - margin.top - margin.bottom;
+  mobile = false;
 } else {
   w -= 20;
   // set the dimensions and margins of the graph
   margin = {top: (h * 0.15), right: (w * 0.28), bottom: 50, left:100 }
   width = w - margin.left - margin.right;
   height = (h * 0.8) - margin.top - margin.bottom;
+  mobile = true;
 }
 
 
@@ -217,7 +219,10 @@ d3.csv("buses.csv", function(data) {
                     .enter().append('g')
                     .attr("class", "legend")
                     .attr("transform", function (d, i) {
-                        { return "translate(-" + (radius / 2) + "," + (radius + 10 + (i * 30)) + ")"}
+                      if (mobile) {
+                        return "translate(-" + radius + "," + (radius + 10 + (i * 30)) + ")";
+                      } else {
+                        return "translate(-" + (radius / 2) + "," + (radius + 10 + (i * 30)) + ")"}
                       });
           legend.append('rect')
                 .attr("x", 0)
