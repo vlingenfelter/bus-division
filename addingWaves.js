@@ -1,9 +1,22 @@
 var w = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
-w -= 40;
-// set the dimensions and margins of the graph
-var margin = {top: 165, right: (w * 0.28) , bottom: 20, left:(w * 0.28)},
-    width = w - margin.left - margin.right,
-    height = 900 - margin.top - margin.bottom;
+var h = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+
+var margin, width, height;
+
+if (w > 1025) {
+  w -= 40;
+  // set the dimensions and margins of the graph
+  margin = {top: 165, right: (w * 0.28) , bottom: 20, left:(w * 0.28)}
+  width = w - margin.left - margin.right;
+  height = 900 - margin.top - margin.bottom;
+} else {
+  w -= 20;
+  // set the dimensions and margins of the graph
+  margin = {top: (h * 0.15), right: (w * 0.28), bottom: 50, left:100 }
+  width = w - margin.left - margin.right;
+  height = (h * 0.8) - margin.top - margin.bottom;
+}
+
 
 
 // append the svg object to the body of the page
