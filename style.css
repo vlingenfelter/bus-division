@@ -1,6 +1,6 @@
 body {
 	background-color: black;
-	font-family: 'Raleway', sans-serif;
+	font-family: 'Helvetica', sans-serif;
 }
 
 .tick text {
@@ -32,6 +32,7 @@ h1 {
   font-weight: 400;
   font-size: 5.5vw;
   margin-bottom: 0px;
+	margin-top: 30px;
 }
 
 h2 {
@@ -49,6 +50,17 @@ h3 {
 	font-size: 24px;
 }
 
+p {
+	color:white;
+}
+
+a {
+	color: white;
+	font-family: Helvetica;
+	border-bottom: 1px dashed white;
+	text-decoration: none;
+}
+
 .arc path {
   stroke: black;
 	stroke-width: 15;
@@ -62,4 +74,5 @@ h3 {
 .legend text {
 	fill: white;
 	font-family: Helvetica;
+	font-size: 12px;
 }
