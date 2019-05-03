@@ -46,6 +46,7 @@ if (w > 1025) {
 // append the svg object to the body of the page
 var svg = d3.select("#my_dataviz")
   .append("svg")
+  .attr("id", "svg")
   .attr("width", width + margin.left + margin.right)
   .attr("height", height + margin.top + margin.bottom)
   .append("g")
@@ -68,9 +69,9 @@ var legend = d3.select("body").append("div")
   .style("opacity", 0);
 
 // get the data for the pie chart
-var sources  = {};
+var sources = {};
 d3.csv("sources.csv", function(data) {
-  for (var i=0; i<data.length; i++) {
+  for (var i = 0; i < data.length; i++) {
     var key = data[i].route;
     var values = {
       hv: data[i].hv * 1,
@@ -223,7 +224,7 @@ d3.csv("buses.csv", function(data) {
         .style("opacity", 1);
       // give the tooltip the proper title
       div.html(title)
-        .style("left", (d3.event.pageX + width + 30) + "px")
+        .style("left", (margin.right + width + 10) + "px")
         .style("top", (d3.event.pageY - radius - 24) + "px");
 
       // bring in the data that will be used to generate the pie
@@ -353,11 +354,11 @@ d3.csv("buses.csv", function(data) {
         // and 28 px (the top margin of the title is 30px)
         .attr("transform", "translate(0," + (d3.event.pageY - margin.top - titleHeight - 28) + ")");
     })
-  // mouseout function:
-  //  - restores the x axis to bottom of the svg
-  //  - makes the tooltip invisible
-  //  - makes all path elements visible
-  .on("mouseout", function(d, i) {
+    // mouseout function:
+    //  - restores the x axis to bottom of the svg
+    //  - makes the tooltip invisible
+    //  - makes all path elements visible
+    .on("mouseout", function(d, i) {
       // make all path elements visible
       d3.selectAll("path")
         .transition()
@@ -407,6 +408,197 @@ d3.csv("buses.csv", function(data) {
         return y(d[1]);
       })
     );
+
+  d3.selectAll("path")
+    .on("mouseover", function(d) {
+      d3.selectAll("path")
+        .transition()
+        .duration(500)
+        .style("opacity", 0);
+
+      d3.select(this)
+        .transition()
+        .duration(500)
+        .style("opacity", 1);
+
+      var thisClass = d3.select(this).attr("class");
+      var key = thisClass.split("-")[1];
+      console.log(key);
+
+      // calculate the width and height of the of the tool tips
+      // width will be 2/3 of the margin
+      // height of pie chart will be same as width
+      var littleWidth = (margin.right / 3) * 2;
+      var littleHeight = littleWidth;
+      // radius of the pie chart
+      var radius = littleWidth / 2;
+      // generate title string
+      var title = `<h3>Route ${key}</h3>`;
+      // generate legend value object
+      var legendVals = {
+        hv: "Headway variability",
+        dt: "Dropped Trips",
+        dv: "Demand variability",
+        pf: "Planned frequency"
+      }
+
+      // make the tooltip appear
+      div.transition()
+        .duration(500)
+        .style("opacity", 1);
+      // give the tooltip the proper title
+      div.html(title)
+        .style("left", (margin.right + width + 10) + "px")
+        .style("top", (d3.event.pageY - radius - 24) + "px");
+
+      // bring in the data that will be used to generate the pie
+      // this is coming from the crowding by sources data
+      var pieData = Object.values(sources[key]);
+
+      // make the variables for the textures that will fill the pie chart
+      // t1: dropped trips
+      // t2: headway variability
+      // t3: demand variability
+      // t4: planned frequency
+      var t1 = textures.lines().thicker().stroke("white").background("black"),
+        t2 = textures.circles().thicker().fill("white").stroke("white").background("black"),
+        t3 = textures.lines().heavier().thinner().orientation("5/8").stroke("black").background("white"),
+        t4 = textures.lines().thicker().orientation("7/8").stroke("black").background("white");
+
+      // make the little SVG that will go in the tool tip
+      var littleSVG = div.append("svg")
+        .attr("width", littleWidth)
+        .attr("height", littleHeight * 2)
+        .append("g")
+        .attr("transform",
+          "translate(" + radius + "," + radius + ")");
+
+      // call all textures
+      littleSVG.call(t1);
+      littleSVG.call(t2);
+      littleSVG.call(t3);
+      littleSVG.call(t4);
+
+      // set up the circle for the pie chart
+      var arc = d3.arc()
+        .outerRadius(radius - 10)
+        .innerRadius(0);
+
+      // make sort the datas into the proper categories
+      var pie = d3.pie()
+        .sort(null)
+        .value(function(d) {
+          return d;
+        });
+
+      // function that makes the color scale
+      // color(s, d) -> texture
+      // where S is an object that contains key value pairs
+      // and D is a value contained within S
+      var color = function(s, d) {
+        // get the key that corresponds to the given value
+        var colorKey = getKeyByValue(s, d);
+        // if statement: returns corresponding texture for each key
+        // TO DO: change this from if statement to an object key pair operation
+        if (colorKey == "dt") { // dropped trips
+          return t1.url();
+        } else if (colorKey == "hv") { // headway variability
+          return t2.url();
+        } else if (colorKey == "dv") { // demand variability
+          return t3.url();
+        } else if (colorKey == "pf") { // planned frequency
+          return t4.url();
+        }
+      };
+
+      // make group to append pie chart to
+      // this will be the first layer of the pie chart
+      // which has a thick black outline and texture fills for values
+      var g = littleSVG.selectAll(".arc")
+        .data(pie(pieData))
+        .enter().append("g")
+        .attr("class", "arc")
+        .append("path")
+        .attr("d", arc)
+        .style("fill", function(d) {
+          return color(sources[key], d.data);
+        });
+
+      // make second layer of pie chart
+      // this will contain the white outline of the pie
+      // white outline sits ontop of the first layer
+      var g2 = littleSVG.selectAll(".arc-outline")
+        .data(pie(pieData))
+        .enter().append("g")
+        .attr("class", "arc-outline")
+        .append("path")
+        .attr("d", arc)
+        .style("fill", "none");
+
+      // create the legend for the pie chart
+      var legend = littleSVG.selectAll('.legend')
+        .data(Object.values(legendVals))
+        .enter().append('g')
+        .attr("class", "legend")
+        .attr("transform", function(d, i) {
+          if (mobile) {
+            return "translate(-" + radius + "," + (radius + 10 + (i * 30)) + ")";
+          } else {
+            return "translate(-" + (radius / 2) + "," + (radius + 10 + (i * 30)) + ")"
+          }
+        });
+
+      // add the little swatches of patterns
+      legend.append('rect')
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", 20)
+        .attr("height", 20)
+        .style("fill", function(d) {
+          return color(legendVals, d)
+        });
+
+      // add the corresponding category titles
+      legend.append('text')
+        .attr("x", 30)
+        .attr("y", 15)
+        .text(function(d) {
+          return d
+        });
+
+      var pathHeight = document.getElementsByClassName(thisClass);
+      var bottom = pathHeight[0].getBoundingClientRect().bottom;
+      var svgTop = document.getElementById("svg").getBoundingClientRect().top;
+      var offset = bottom - svgTop;
+
+      // move the x axis up to the highlighted element
+      var xAxis = d3.selectAll(".x-axis")
+        .transition()
+        .duration(500)
+        // take mouse position and corrected it by the top margin of the SVG
+        // the height of the title of the page
+        // and 28 px (the top margin of the title is 30px)
+        .attr("transform", "translate(0," + (offset - margin.top) + ")");
+    })
+    .on("mouseout", function(d) {
+      // return all paths to visible
+      d3.selectAll("path")
+        .transition()
+        .duration(500)
+        .style("opacity", 1);
+
+      // make tool tip invisible
+      div.transition()
+        .duration(500)
+        .style("opacity", 0);
+
+      // bring xAxis down to bottom of the SVG
+      var xAxis = d3.selectAll(".x-axis")
+        .transition()
+        .duration(500)
+        .attr("transform", "translate(0," + height + ")")
+        .attr("class", "x-axis")
+    })
 
 
 })
