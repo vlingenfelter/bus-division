@@ -224,7 +224,7 @@ d3.csv("buses.csv", function(data) {
         .style("opacity", 1);
       // give the tooltip the proper title
       div.html(title)
-        .style("left", (margin.right + width + 10) + "px")
+        .style("left", (margin.left + width + 10) + "px")
         .style("top", (d3.event.pageY - radius - 24) + "px");
 
       // bring in the data that will be used to generate the pie
@@ -409,21 +409,52 @@ d3.csv("buses.csv", function(data) {
       })
     );
 
-  d3.selectAll("path")
+  svg.selectAll("area")
+    .data(busCrowding)
+    .enter()
+    .append("path")
+    .attr("transform", function(d) {
+      return ("translate(0," + (yName(d.key) - height) + ")")
+    })
+    .attr("id", function(d) {
+      return "class-" + d.key
+    })
+    .attr("class", "invisible")
+    .datum(function(d) {
+      return (d.density)
+    })
+    .attr("fill", "transparent")
+    .attr("stroke", "transparent")
+    .attr("stroke-width", 15)
+    .attr("d", d3.line()
+      .curve(d3.curveBasis)
+      .x(function(d) {
+        return x(d[0]);
+      })
+      .y(function(d) {
+        return y(d[1]);
+      })
+    );
+
+  d3.selectAll(".invisible")
     .on("mouseover", function(d) {
       d3.selectAll("path")
         .transition()
         .duration(500)
         .style("opacity", 0);
 
-      d3.select(this)
+
+      var thisClass = d3.select(this).attr('id');
+      console.log(thisClass);
+      var key = thisClass.split("-")[1];
+      console.log(key);
+
+      var selectorClass = "." + thisClass;
+
+      d3.selectAll(selectorClass)
         .transition()
         .duration(500)
         .style("opacity", 1);
-
-      var thisClass = d3.select(this).attr("class");
-      var key = thisClass.split("-")[1];
-      console.log(key);
 
       // calculate the width and height of the of the tool tips
       // width will be 2/3 of the margin
@@ -448,7 +479,7 @@ d3.csv("buses.csv", function(data) {
         .style("opacity", 1);
       // give the tooltip the proper title
       div.html(title)
-        .style("left", (margin.right + width + 10) + "px")
+        .style("left", (margin.left + width + 10) + "px")
         .style("top", (d3.event.pageY - radius - 24) + "px");
 
       // bring in the data that will be used to generate the pie
