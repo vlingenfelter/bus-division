@@ -87,7 +87,7 @@ d3.csv("sources.csv", function(data) {
 // takes in an object and a value within that objects
 // finds the key associated with that object
 function getKeyByValue(object, value) {
-  return Object.keys(object).find(key => object[key] === value);
+  return Object.keys(object).find(function(key) {return object[key] === value});
 }
 
 //read data
@@ -107,7 +107,7 @@ d3.csv("buses.csv", function(data) {
 
   // get each halfhour in the dataset
   // this is used later when reformatting the data
-  distinctHalfhour = [...new Set(data.map(d => d.halfhour))];
+  distinctHalfhour = [...new Set(data.map(function(d) {return d.halfhour}))];
 
   // bus crowding is empty array that will be filled in
   busCrowding = [];
@@ -438,19 +438,21 @@ d3.csv("buses.csv", function(data) {
 
   d3.selectAll(".invisible")
     .on("mouseover", function(d) {
+      // make all path elements invisible
       d3.selectAll("path")
         .transition()
         .duration(500)
         .style("opacity", 0);
 
 
+      // get selectors
       var thisClass = d3.select(this).attr('id');
-      console.log(thisClass);
       var key = thisClass.split("-")[1];
-      console.log(key);
 
+      // get string for visible path element
       var selectorClass = "." + thisClass;
 
+      // get the corresponding visible path element
       d3.selectAll(selectorClass)
         .transition()
         .duration(500)
